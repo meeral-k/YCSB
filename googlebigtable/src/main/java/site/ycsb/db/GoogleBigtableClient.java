@@ -119,6 +119,8 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       CONFIG.set(BigtableOptionsFactory.BIGTABLE_BULK_MAX_ROW_KEY_COUNT,
           getProperties().getProperty(ASYNC_MAX_INFLIGHT_RPCS));
     }
+    CONFIG.set(BigtableOptionsFactory.BIGTABLE_HOST_KEY, "test-bigtable.sandbox.googleapis.com");
+
     // make it easy on ourselves by copying all CLI properties into the config object.
     final Iterator<Entry<Object, Object>> it = props.entrySet().iterator();
     while (it.hasNext()) {
