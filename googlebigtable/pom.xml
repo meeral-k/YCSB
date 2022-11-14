@@ -42,6 +42,20 @@ LICENSE file.
       <version>${project.version}</version>
       <scope>provided</scope>
     </dependency>
-    
+
+    <dependency>
+      <groupId>org.apache.hbase</groupId>
+      <artifactId>hbase-protocol</artifactId>
+      <version>1.4.6</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/com.google.cloud.bigtable/bigtable-hbase-1.x -->
+    <dependency>
+      <groupId>com.google.cloud.bigtable</groupId>
+      <artifactId>bigtable-hbase-1.x</artifactId>
+      <version>1.4.0</version>
+    </dependency>
+
+
   </dependencies>
 </project>
