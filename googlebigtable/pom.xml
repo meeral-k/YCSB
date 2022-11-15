@@ -67,6 +67,11 @@ LICENSE file.
       <version>1.12.1</version>
     </dependency>
     <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-alts</artifactId>
+      <version>1.50.1</version>
+    </dependency>
+    <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
     </dependency>
