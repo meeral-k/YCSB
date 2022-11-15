@@ -6,7 +6,7 @@
  * may obtain a copy of the License at
  *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
@@ -16,383 +16,355 @@
  */
 package site.ycsb.db;
 
+import static com.google.cloud.bigtable.data.v2.models.Filters.FILTERS;
+
+import com.google.api.gax.batching.Batcher;
+import com.google.api.gax.batching.BatchingSettings;
+import com.google.api.gax.batching.FlowControlSettings;
+import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.bigtable.data.v2.BigtableDataClient;
+import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
+import com.google.cloud.bigtable.data.v2.models.Filters.Filter;
+import com.google.cloud.bigtable.data.v2.models.MutationApi;
+import com.google.cloud.bigtable.data.v2.models.Query;
+import com.google.cloud.bigtable.data.v2.models.Range.ByteStringRange;
+import com.google.cloud.bigtable.data.v2.models.Row;
+import com.google.cloud.bigtable.data.v2.models.RowCell;
+import com.google.cloud.bigtable.data.v2.models.RowMutation;
+import com.google.cloud.bigtable.data.v2.models.RowMutationEntry;
+import com.google.common.base.Joiner;
+import com.google.common.base.Preconditions;
+import com.google.protobuf.ByteString;
+import com.google.protobuf.UnsafeByteOperations;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Map;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Properties;
-
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.hbase.HBaseConfiguration;
-import org.apache.hadoop.hbase.util.Bytes;
-
 import java.util.Set;
 import java.util.Vector;
-import java.util.concurrent.ExecutionException;
-
-import com.google.bigtable.v2.Column;
-import com.google.bigtable.v2.Family;
-import com.google.bigtable.v2.MutateRowRequest;
-import com.google.bigtable.v2.Mutation;
-import com.google.bigtable.v2.ReadRowsRequest;
-import com.google.bigtable.v2.Row;
-import com.google.bigtable.v2.RowFilter;
-import com.google.bigtable.v2.RowRange;
-import com.google.bigtable.v2.RowSet;
-import com.google.bigtable.v2.Mutation.DeleteFromRow;
-import com.google.bigtable.v2.Mutation.SetCell;
-import com.google.bigtable.v2.RowFilter.Chain.Builder;
-import com.google.cloud.bigtable.config.BigtableOptions;
-import com.google.cloud.bigtable.grpc.BigtableDataClient;
-import com.google.cloud.bigtable.grpc.BigtableSession;
-import com.google.cloud.bigtable.grpc.BigtableTableName;
-import com.google.cloud.bigtable.grpc.async.BulkMutation;
-import com.google.cloud.bigtable.hbase.BigtableOptionsFactory;
-import com.google.cloud.bigtable.util.ByteStringer;
-import com.google.protobuf.ByteString;
-import site.ycsb.ByteArrayByteIterator;
+import javax.annotation.Nullable;
 import site.ycsb.ByteIterator;
 import site.ycsb.DBException;
+import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
 
 /**
- * Google Bigtable Proto client for YCSB framework.
- * 
- * Bigtable offers two APIs. These include a native Protobuf GRPC API as well as 
- * an HBase API wrapper for the GRPC API. This client implements the Protobuf 
- * API to test the underlying calls wrapped up in the HBase API. To use the 
- * HBase API, see the hbase10 client binding.
+ * Google Bigtable native client for YCSB framework.
+ *
+ * <p>Bigtable offers two APIs. These include a native API as well as an HBase API
+ * wrapper for the GRPC API. This client implements the native API to test the underlying calls
+ * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
-  
+
   /** Property names for the CLI. */
-  private static final String ASYNC_MUTATOR_MAX_MEMORY = "mutatorMaxMemory";
-  private static final String ASYNC_MAX_INFLIGHT_RPCS = "mutatorMaxInflightRPCs";
-  private static final String CLIENT_SIDE_BUFFERING = "clientbuffering";
-  
-  /** Tracks running thread counts so we know when to close the session. */ 
-  private static int threadCount = 0;
-  
-  /** This will load the hbase-site.xml config file and/or store CLI options. */
-  private static final Configuration CONFIG = HBaseConfiguration.create();
-  
+  static final String EMULATOR_HOST_KEY = "google.bigtable.emulator_host";
+
+  static final String PROJECT_KEY = "google.bigtable.project.id";
+  static final String INSTANCE_KEY = "google.bigtable.instance.id";
+  static final String JSON_KEY_FILE_KEY = "google.bigtable.auth.json.keyfile";
+  static final String DEBUG_KEY = "debug";
+  static final String COLUMN_FAMILY_KEY = "columnfamily";
+
+  static final String ASYNC_MUTATOR_MAX_MEMORY = "mutatorMaxMemory";
+  static final String ASYNC_MAX_INFLIGHT_RPCS = "mutatorMaxInflightRPCs";
+  static final String CLIENT_SIDE_BUFFERING = "clientbuffering";
+
+  /** Shared bigtable client instance. */
+  private static BigtableDataClient client = null;
+
+  private static int clientRefcount = 0;
+
   /** Print debug information to standard out. */
   private boolean debug = false;
-  
-  /** Global Bigtable native API objects. */ 
-  private static BigtableOptions options;
-  private static BigtableSession session;
-  
-  /** Thread local Bigtable native API objects. */
-  private BigtableDataClient client;
 
   /** The column family use for the workload. */
-  private byte[] columnFamilyBytes;
-  
-  /** Cache for the last table name/ID to avoid byte conversions. */
-  private String lastTable = "";
-  private byte[] lastTableBytes;
-  
+  private String columnFamily;
+
   /**
-   * If true, buffer mutations on the client. For measuring insert/update/delete 
-   * latencies, client side buffering should be disabled.
+   * If true, buffer mutations on the client. For measuring insert/update/delete latencies, client
+   * side buffering should be disabled.
    */
   private boolean clientSideBuffering = false;
 
-  private BulkMutation bulkMutation;
+  private Map<String, Batcher<RowMutationEntry, Void>> batchers = new HashMap<>();
+
+  private static synchronized BigtableDataClient getOrCreateClient(Properties properties)
+      throws DBException {
+    if (clientRefcount > 0) {
+      clientRefcount++;
+      return client;
+    }
+
+    // Extract the properties
+    @Nullable String emulatorHost = properties.getProperty(EMULATOR_HOST_KEY, null);
+
+    String projectId =
+        Preconditions.checkNotNull(
+            properties.getProperty(PROJECT_KEY), "%s property must be set", PROJECT_KEY);
+    String instanceId =
+        Preconditions.checkNotNull(
+            properties.getProperty(INSTANCE_KEY), "%s property must be set", INSTANCE_KEY);
+    @Nullable String jsonKeyFilePath = properties.getProperty(JSON_KEY_FILE_KEY, null);
+    boolean clientBufferingEnabled =
+        Boolean.parseBoolean(properties.getProperty(CLIENT_SIDE_BUFFERING, "true"));
+    @Nullable Long maxMemory = null;
+    if (properties.contains(ASYNC_MUTATOR_MAX_MEMORY)) {
+      maxMemory = Long.parseLong(properties.getProperty(ASYNC_MUTATOR_MAX_MEMORY));
+    }
+    @Nullable Long maxRpcs = null;
+    if (properties.contains(ASYNC_MAX_INFLIGHT_RPCS)) {
+      maxRpcs = Long.parseLong(properties.getProperty(ASYNC_MAX_INFLIGHT_RPCS));
+    }
+
+    BigtableDataSettings.Builder builder;
+    if (emulatorHost != null) {
+      int index = emulatorHost.lastIndexOf(":");
+      String host = "localhost";
+      int port;
+      if (index > 0) {
+        host = emulatorHost.substring(0, index);
+        port = Integer.parseInt(emulatorHost.substring(index + 1));
+      } else {
+        port = Integer.parseInt(emulatorHost);
+      }
+      builder = BigtableDataSettings.newBuilderForEmulator(host, port);
+    } else {
+      builder = BigtableDataSettings.newBuilder();
+    }
+
+    builder
+        .setProjectId(projectId)
+        .setInstanceId(instanceId)
+        .setRefreshingChannel(true);
+
+    if (jsonKeyFilePath != null) {
+      try (FileInputStream fin = new FileInputStream(jsonKeyFilePath)) {
+        builder
+            .stubSettings()
+            .setCredentialsProvider(
+                FixedCredentialsProvider.create(GoogleCredentials.fromStream(fin)));
+      } catch (IOException e) {
+        throw new DBException(
+            String.format("Failed to load credentials specified at path %s", jsonKeyFilePath), e);
+      }
+    }
+
+    if (clientBufferingEnabled) {
+      BatchingSettings defaultBatchingSettings =
+          builder.stubSettings().bulkMutateRowsSettings().getBatchingSettings();
+      FlowControlSettings.Builder flowControlSettings =
+          defaultBatchingSettings.getFlowControlSettings().toBuilder();
+
+      if (maxMemory != null) {
+        flowControlSettings.setMaxOutstandingRequestBytes(maxMemory);
+      }
+      if (maxRpcs != null) {
+        flowControlSettings.setMaxOutstandingElementCount(
+            defaultBatchingSettings.getElementCountThreshold() * maxRpcs);
+      }
+      builder
+          .stubSettings()
+          .bulkMutateRowsSettings()
+          .setBatchingSettings(
+              defaultBatchingSettings.toBuilder()
+                  .setFlowControlSettings(flowControlSettings.build())
+                  .build());
+    }
+
+    try {
+      client = BigtableDataClient.create(builder.build());
+    } catch (IOException e) {
+      throw new DBException("Failed to construct the Bigtable client", e);
+    }
+    clientRefcount++;
+    return client;
+  }
+
+  private static synchronized void releaseClient() {
+    if (--clientRefcount >= 0) {
+      return;
+    }
+    client.close();
+  }
 
   @Override
   public void init() throws DBException {
     Properties props = getProperties();
-    
-    // Defaults the user can override if needed
-    if (getProperties().containsKey(ASYNC_MUTATOR_MAX_MEMORY)) {
-      CONFIG.set(BigtableOptionsFactory.BIGTABLE_BUFFERED_MUTATOR_MAX_MEMORY_KEY,
-          getProperties().getProperty(ASYNC_MUTATOR_MAX_MEMORY));
-    }
-    if (getProperties().containsKey(ASYNC_MAX_INFLIGHT_RPCS)) {
-      CONFIG.set(BigtableOptionsFactory.BIGTABLE_BULK_MAX_ROW_KEY_COUNT,
-          getProperties().getProperty(ASYNC_MAX_INFLIGHT_RPCS));
-    }
-    CONFIG.set(BigtableOptionsFactory.BIGTABLE_HOST_KEY, "test-bigtable.sandbox.googleapis.com");
 
-    // make it easy on ourselves by copying all CLI properties into the config object.
-    final Iterator<Entry<Object, Object>> it = props.entrySet().iterator();
-    while (it.hasNext()) {
-      Entry<Object, Object> entry = it.next();
-      CONFIG.set((String)entry.getKey(), (String)entry.getValue());
-    }
-    
-    clientSideBuffering = getProperties()
-        .getProperty(CLIENT_SIDE_BUFFERING, "false").equals("true");
-    
-    System.err.println("Running Google Bigtable with Proto API" +
-         (clientSideBuffering ? " and client side buffering." : "."));
-    
-    synchronized (CONFIG) {
-      ++threadCount;
-      if (session == null) {
-        try {
-          options = BigtableOptionsFactory.fromConfiguration(CONFIG);
-          session = new BigtableSession(options);
-          // important to instantiate the first client here, otherwise the
-          // other threads may receive an NPE from the options when they try
-          // to read the cluster name.
-          client = session.getDataClient();
-        } catch (IOException e) {
-          throw new DBException("Error loading options from config: ", e);
-        }
-      } else {
-        client = session.getDataClient();
-      }
-    }
-    
-    if ((getProperties().getProperty("debug") != null)
-        && (getProperties().getProperty("debug").compareTo("true") == 0)) {
-      debug = true;
-    }
-    
-    final String columnFamily = getProperties().getProperty("columnfamily");
+    clientSideBuffering =
+        Boolean.parseBoolean(getProperties().getProperty(CLIENT_SIDE_BUFFERING, "false"));
+
+    System.err.println(
+        "Running Google Bigtable with Proto API"
+            + (clientSideBuffering ? " and client side buffering." : "."));
+
+    getOrCreateClient(props);
+
+    debug = Boolean.parseBoolean(props.getProperty(DEBUG_KEY, "false"));
+
+    columnFamily = getProperties().getProperty(COLUMN_FAMILY_KEY);
     if (columnFamily == null) {
-      System.err.println("Error, must specify a columnfamily for Bigtable table");
-      throw new DBException("No columnfamily specified");
+      throw new DBException(String.format("%s must be specified", COLUMN_FAMILY_KEY));
     }
-    columnFamilyBytes = Bytes.toBytes(columnFamily);
   }
-  
+
   @Override
   public void cleanup() throws DBException {
-    if (bulkMutation != null) {
+    List<Exception> exceptions = new ArrayList<>();
+
+    for (Entry<String, Batcher<RowMutationEntry, Void>> enry : batchers.entrySet()) {
       try {
-        bulkMutation.flush();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        throw new DBException(e);
-      } catch(RuntimeException e){
-        throw new DBException(e);
+        enry.getValue().close();
+      } catch (RuntimeException | InterruptedException e) {
+        if (e instanceof InterruptedException) {
+          Thread.currentThread().interrupt();
+        }
+        exceptions.add(e);
       }
     }
 
-    synchronized (CONFIG) {
-      --threadCount;
-      if (threadCount <= 0) {
-        try {
-          session.close();
-        } catch (IOException e) {
-          throw new DBException(e);
-        }
-      }
+    try {
+      releaseClient();
+    } catch (RuntimeException e) {
+      exceptions.add(e);
+    }
+
+    if (!exceptions.isEmpty()) {
+      DBException parentError = new DBException("Failed to cleanup Bigtable client resources");
+      exceptions.forEach(parentError::addSuppressed);
+      throw parentError;
     }
   }
-  
+
+  private Batcher<RowMutationEntry, Void> getOrCreateBatcher(String tableId) {
+    return batchers.computeIfAbsent(tableId, client::newBulkMutationBatcher);
+  }
+
   @Override
-  public Status read(String table, String key, Set<String> fields,
-                     Map<String, ByteIterator> result) {
+  public Status read(
+      String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
     if (debug) {
-      System.out.println("Doing read from Bigtable columnfamily " 
-          + new String(columnFamilyBytes));
+      System.out.println("Doing read from Bigtable columnfamily " + columnFamily);
       System.out.println("Doing read for key: " + key);
     }
-    
-    setTable(table);
-    
-    RowFilter filter = RowFilter.newBuilder()
-        .setFamilyNameRegexFilterBytes(ByteStringer.wrap(columnFamilyBytes))
-        .build();
-    if (fields != null && fields.size() > 0) {
-      Builder filterChain = RowFilter.Chain.newBuilder();
-      filterChain.addFilters(filter);
-      filterChain.addFilters(RowFilter.newBuilder()
-          .setCellsPerColumnLimitFilter(1)
-          .build());
-      int count = 0;
-      // usually "field#" so pre-alloc
-      final StringBuilder regex = new StringBuilder(fields.size() * 6);
-      for (final String field : fields) {
-        if (count++ > 0) {
-          regex.append("|");
-        }
-        regex.append(field);
-      }
-      filterChain.addFilters(RowFilter.newBuilder()
-          .setColumnQualifierRegexFilter(
-              ByteStringer.wrap(regex.toString().getBytes()))).build();
-      filter = RowFilter.newBuilder().setChain(filterChain.build()).build();
+
+    Filter filter = FILTERS.family().exactMatch(columnFamily);
+    if (fields != null && !fields.isEmpty()) {
+      filter =
+          FILTERS
+              .chain()
+              .filter(filter)
+              .filter(FILTERS.limit().cellsPerColumn(1))
+              .filter(FILTERS.qualifier().regex(Joiner.on("|").join(fields)));
     }
-    
-    final ReadRowsRequest.Builder rrr = ReadRowsRequest.newBuilder()
-        .setTableNameBytes(ByteStringer.wrap(lastTableBytes))
-        .setFilter(filter)
-        .setRows(RowSet.newBuilder()
-          .addRowKeys(ByteStringer.wrap(key.getBytes())));
-    
-    List<Row> rows;
+
     try {
-      rows = client.readRowsAsync(rrr.build()).get();
-      if (rows == null || rows.isEmpty()) {
-        return Status.NOT_FOUND;
-      }
-      for (final Row row : rows) {
-        for (final Family family : row.getFamiliesList()) {
-          if (Arrays.equals(family.getNameBytes().toByteArray(), columnFamilyBytes)) {
-            for (final Column column : family.getColumnsList()) {
-              // we should only have a single cell per column
-              result.put(column.getQualifier().toString(UTF8_CHARSET), 
-                  new ByteArrayByteIterator(column.getCells(0).getValue().toByteArray()));
-              if (debug) {
-                System.out.println(
-                    "Result for field: " + column.getQualifier().toString(UTF8_CHARSET)
-                        + " is: " + column.getCells(0).getValue().toString(UTF8_CHARSET));
-              }
-            }
-          }
+      for (RowCell cell : client.readRow(table, key, filter).getCells()) {
+        result.put(cell.getQualifier().toString(UTF8_CHARSET), wrapByteString(cell.getValue()));
+
+        if (debug) {
+          System.out.println(
+              "Result for field: "
+                  + cell.getQualifier().toString(UTF8_CHARSET)
+                  + " is: "
+                  + cell.getValue().toString(UTF8_CHARSET));
         }
       }
-      
+
       return Status.OK;
-    } catch (InterruptedException e) {
-      System.err.println("Interrupted during get: " + e);
-      Thread.currentThread().interrupt();
-      return Status.ERROR;
-    } catch (ExecutionException e) {
-      System.err.println("Exception during get: " + e);
+    } catch (RuntimeException e) {
       return Status.ERROR;
     }
   }
 
   @Override
-  public Status scan(String table, String startkey, int recordcount,
-      Set<String> fields, Vector<HashMap<String, ByteIterator>> result) {
-    setTable(table);
-    
-    RowFilter filter = RowFilter.newBuilder()
-        .setFamilyNameRegexFilterBytes(ByteStringer.wrap(columnFamilyBytes))
-        .build();
-    if (fields != null && fields.size() > 0) {
-      Builder filterChain = RowFilter.Chain.newBuilder();
-      filterChain.addFilters(filter);
-      filterChain.addFilters(RowFilter.newBuilder()
-          .setCellsPerColumnLimitFilter(1)
-          .build());
-      int count = 0;
-      // usually "field#" so pre-alloc
-      final StringBuilder regex = new StringBuilder(fields.size() * 6);
-      for (final String field : fields) {
-        if (count++ > 0) {
-          regex.append("|");
-        }
-        regex.append(field);
-      }
-      filterChain.addFilters(RowFilter.newBuilder()
-          .setColumnQualifierRegexFilter(
-              ByteStringer.wrap(regex.toString().getBytes()))).build();
-      filter = RowFilter.newBuilder().setChain(filterChain.build()).build();
+  public Status scan(
+      String table,
+      String startkey,
+      int recordcount,
+      Set<String> fields,
+      Vector<HashMap<String, ByteIterator>> result) {
+
+    Filter filter = FILTERS.family().exactMatch(columnFamily);
+    if (fields != null && !fields.isEmpty()) {
+      filter =
+          FILTERS
+              .chain()
+              .filter(filter)
+              .filter(FILTERS.limit().cellsPerColumn(1))
+              .filter(FILTERS.qualifier().regex(Joiner.on("|").join(fields)));
     }
-    
-    final RowRange range = RowRange.newBuilder()
-        .setStartKeyClosed(ByteStringer.wrap(startkey.getBytes()))
-        .build();
 
-    final RowSet rowSet = RowSet.newBuilder()
-        .addRowRanges(range)
-        .build();
+    Query query =
+        Query.create(table)
+            .filter(filter)
+            .range(ByteStringRange.unbounded().startClosed(startkey))
+            .limit(recordcount);
 
-    final ReadRowsRequest.Builder rrr = ReadRowsRequest.newBuilder()
-        .setTableNameBytes(ByteStringer.wrap(lastTableBytes))
-        .setFilter(filter)
-        .setRows(rowSet);
-    
     List<Row> rows;
     try {
-      rows = client.readRowsAsync(rrr.build()).get();
-      if (rows == null || rows.isEmpty()) {
-        return Status.NOT_FOUND;
-      }
-      int numResults = 0;
-      
-      for (final Row row : rows) {
-        final HashMap<String, ByteIterator> rowResult =
-            new HashMap<String, ByteIterator>(fields != null ? fields.size() : 10);
-        
-        for (final Family family : row.getFamiliesList()) {
-          if (Arrays.equals(family.getNameBytes().toByteArray(), columnFamilyBytes)) {
-            for (final Column column : family.getColumnsList()) {
-              // we should only have a single cell per column
-              rowResult.put(column.getQualifier().toString(UTF8_CHARSET), 
-                  new ByteArrayByteIterator(column.getCells(0).getValue().toByteArray()));
-              if (debug) {
-                System.out.println(
-                    "Result for field: " + column.getQualifier().toString(UTF8_CHARSET)
-                        + " is: " + column.getCells(0).getValue().toString(UTF8_CHARSET));
-              }
-            }
-          }
-        }
-        
-        result.add(rowResult);
-        
-        numResults++;
-        if (numResults >= recordcount) {// if hit recordcount, bail out
-          break;
-        }
-      }
-      return Status.OK;
-    } catch (InterruptedException e) {
-      System.err.println("Interrupted during scan: " + e);
-      Thread.currentThread().interrupt();
-      return Status.ERROR;
-    } catch (ExecutionException e) {
+      rows = client.readRowsCallable().all().call(query);
+    } catch (RuntimeException e) {
       System.err.println("Exception during scan: " + e);
       return Status.ERROR;
     }
+
+    if (rows.isEmpty()) {
+      return Status.NOT_FOUND;
+    }
+
+    for (Row row : rows) {
+      HashMap<String, ByteIterator> rowResult = new HashMap<>();
+      for (RowCell cell : row.getCells()) {
+        rowResult.put(cell.getQualifier().toString(UTF8_CHARSET), wrapByteString(cell.getValue()));
+        if (debug) {
+          System.out.println(
+              "Result for field: "
+                  + cell.getQualifier().toString(UTF8_CHARSET)
+                  + " is: "
+                  + cell.getValue().toString(UTF8_CHARSET));
+        }
+      }
+      result.add(rowResult);
+    }
+
+    return Status.OK;
   }
 
   @Override
-  public Status update(String table, String key,
-                       Map<String, ByteIterator> values) {
+  public Status update(String table, String key, Map<String, ByteIterator> values) {
     if (debug) {
       System.out.println("Setting up put for key: " + key);
     }
-    
-    setTable(table);
-    
-    final MutateRowRequest.Builder rowMutation = MutateRowRequest.newBuilder();
-    rowMutation.setRowKey(ByteString.copyFromUtf8(key));
-    rowMutation.setTableNameBytes(ByteStringer.wrap(lastTableBytes));
-    
-    for (final Entry<String, ByteIterator> entry : values.entrySet()) {
-      final Mutation.Builder mutationBuilder = rowMutation.addMutationsBuilder();
-      final SetCell.Builder setCellBuilder = mutationBuilder.getSetCellBuilder();
-      
-      setCellBuilder.setFamilyNameBytes(ByteStringer.wrap(columnFamilyBytes));
-      setCellBuilder.setColumnQualifier(ByteStringer.wrap(entry.getKey().getBytes()));
-      setCellBuilder.setValue(ByteStringer.wrap(entry.getValue().toArray()));
 
-      // Bigtable uses a 1ms granularity
-      setCellBuilder.setTimestampMicros(System.currentTimeMillis() * 1000);
-    }
-    
-    try {
-      if (clientSideBuffering) {
-        bulkMutation.add(rowMutation.build());
-      } else {
-        client.mutateRow(rowMutation.build());
+    if (clientSideBuffering) {
+      RowMutationEntry entry = RowMutationEntry.create(key);
+      populateMutations(values, entry);
+      getOrCreateBatcher(table).add(entry);
+      return Status.BATCHED_OK;
+    } else {
+      RowMutation rowMutation = RowMutation.create(table, key);
+      populateMutations(values, rowMutation);
+      try {
+        client.mutateRow(rowMutation);
+        return Status.OK;
+      } catch (RuntimeException e) {
+        System.err.println("Failed to insert key: " + key + " " + e.getMessage());
+        return Status.ERROR;
       }
-      return Status.OK;
-    } catch (RuntimeException e) {
-      System.err.println("Failed to insert key: " + key + " " + e.getMessage());
-      return Status.ERROR;
     }
   }
 
   @Override
-  public Status insert(String table, String key,
-                       Map<String, ByteIterator> values) {
+  public Status insert(String table, String key, Map<String, ByteIterator> values) {
     return update(table, key, values);
   }
 
@@ -401,54 +373,36 @@ public class GoogleBigtableClient extends site.ycsb.DB {
     if (debug) {
       System.out.println("Doing delete for key: " + key);
     }
-    
-    setTable(table);
-    
-    final MutateRowRequest.Builder rowMutation = MutateRowRequest.newBuilder()
-        .setRowKey(ByteString.copyFromUtf8(key))
-        .setTableNameBytes(ByteStringer.wrap(lastTableBytes));
-    rowMutation.addMutationsBuilder().setDeleteFromRow(
-        DeleteFromRow.getDefaultInstance());
-    
-    try {
-      if (clientSideBuffering) {
-        bulkMutation.add(rowMutation.build());
-      } else {
-        client.mutateRow(rowMutation.build());
+
+    if (clientSideBuffering) {
+      getOrCreateBatcher(table).add(RowMutationEntry.create(key).deleteRow());
+      return Status.BATCHED_OK;
+    } else {
+      try {
+        client.mutateRow(RowMutation.create(table, key).deleteRow());
+        return Status.OK;
+      } catch (RuntimeException e) {
+        System.err.println("Failed to delete key: " + key + " " + e.getMessage());
+        return Status.ERROR;
       }
-      return Status.OK;
-    } catch (RuntimeException e) {
-      System.err.println("Failed to delete key: " + key + " " + e.getMessage());
-      return Status.ERROR;
     }
   }
 
-  /**
-   * Little helper to set the table byte array. If it's different than the last
-   * table we reset the byte array. Otherwise we just use the existing array.
-   * @param table The table we're operating against
-   */
-  private void setTable(final String table) {
-    if (!lastTable.equals(table)) {
-      lastTable = table;
-      BigtableTableName tableName = options
-          .getInstanceName()
-          .toTableName(table);
-      lastTableBytes = tableName
-          .toString()
-          .getBytes();
-      synchronized(this) {
-        if (bulkMutation != null) {
-          try {
-            bulkMutation.flush();
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-          }
-        }
-        bulkMutation = session.createBulkMutation(tableName);
-      }
+  private void populateMutations(Map<String, ByteIterator> input, MutationApi<?> output) {
+    for (Entry<String, ByteIterator> entry : input.entrySet()) {
+      output.setCell(columnFamily, wrapString(entry.getKey()), wrapByteIterator(entry.getValue()));
     }
   }
-  
+
+  private static ByteIterator wrapByteString(ByteString byteString) {
+    return new InputStreamByteIterator(byteString.newInput(), byteString.size());
+  }
+
+  private static ByteString wrapString(String s) {
+    return ByteString.copyFromUtf8(s);
+  }
+
+  private static ByteString wrapByteIterator(ByteIterator iterator) {
+    return UnsafeByteOperations.unsafeWrap(iterator.toArray());
+  }
 }
