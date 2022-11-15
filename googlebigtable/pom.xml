@@ -117,6 +117,12 @@ LICENSE file.
       <artifactId>opencensus-contrib-http-util</artifactId>
       <version>0.31.1</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/io.opencensus/opencensus-api -->
+    <dependency>
+      <groupId>io.opencensus</groupId>
+      <artifactId>opencensus-api</artifactId>
+      <version>0.31.1</version>
+    </dependency>
 
   </dependencies>
 </project>
