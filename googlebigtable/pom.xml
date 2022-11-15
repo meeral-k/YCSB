@@ -120,12 +120,59 @@ LICENSE file.
       <version>3.4.4</version>
     </dependency>
 
+    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-alts -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-alts</artifactId>
+      <version>1.50.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-stub -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-stub</artifactId>
+      <version>1.50.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-grpclb -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-grpclb</artifactId>
+      <version>1.50.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-googleapis -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-googleapis</artifactId>
+      <version>1.50.2</version>
+    </dependency>
+
+    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-xds -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-xds</artifactId>
+      <version>1.50.2</version>
+    </dependency>
+
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-rls -->
     <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-rls</artifactId>
-      <version>1.49.0</version>
+      <version>1.50.2</version>
     </dependency>
+
+    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-services -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-services</artifactId>
+      <version>1.50.2</version>
+    </dependency>
+
+
+
+
+
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
