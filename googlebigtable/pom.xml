@@ -184,9 +184,6 @@ LICENSE file.
       <version>2.19.5</version>
     </dependency>
 
-
-
-
     <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
