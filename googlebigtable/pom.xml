@@ -92,5 +92,12 @@ LICENSE file.
       <artifactId>grpc-alts</artifactId>
       <version>1.50.1</version>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/io.perfmark/perfmark-api -->
+    <dependency>
+      <groupId>io.perfmark</groupId>
+      <artifactId>perfmark-api</artifactId>
+      <version>0.26.0</version>
+    </dependency>
+
   </dependencies>
 </project>
