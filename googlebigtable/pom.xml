@@ -68,5 +68,29 @@ LICENSE file.
       <groupId>com.google.api.grpc</groupId>
       <artifactId>proto-google-cloud-bigtable-v2</artifactId>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.auth/google-auth-library-credentials -->
+    <dependency>
+      <groupId>com.google.auth</groupId>
+      <artifactId>google-auth-library-credentials</artifactId>
+      <version>1.12.1</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http -->
+    <dependency>
+      <groupId>com.google.auth</groupId>
+      <artifactId>google-auth-library-oauth2-http</artifactId>
+      <version>1.12.1</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/io.opencensus/opencensus-contrib-http-util -->
+    <dependency>
+      <groupId>io.opencensus</groupId>
+      <artifactId>opencensus-contrib-http-util</artifactId>
+      <version>0.31.1</version>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-alts -->
+    <dependency>
+      <groupId>io.grpc</groupId>
+      <artifactId>grpc-alts</artifactId>
+      <version>1.50.1</version>
+    </dependency>
   </dependencies>
 </project>
