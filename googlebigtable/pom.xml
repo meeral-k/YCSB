@@ -117,11 +117,13 @@ LICENSE file.
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigtable</artifactId>
     </dependency>
+    <!-- https://mvnrepository.com/artifact/com.lmax/disruptor -->
     <dependency>
-      <groupId>com.google.cloud.bigtable</groupId>
-      <artifactId>bigtable-hbase-2.x-shaded</artifactId>
-      <version>2.6.3</version>
+      <groupId>com.lmax</groupId>
+      <artifactId>disruptor</artifactId>
+      <version>3.3.0</version>
     </dependency>
+
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-rls -->
     <dependency>
       <groupId>io.grpc</groupId>
