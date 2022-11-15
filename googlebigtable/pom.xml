@@ -111,25 +111,7 @@ LICENSE file.
       <version>2.5.2</version>
     </dependency>
 
-    <!-- https://mvnrepository.com/artifact/io.opencensus/opencensus-proto -->
-    <dependency>
-      <groupId>io.opencensus</groupId>
-      <artifactId>opencensus-proto</artifactId>
-      <version>0.2.0</version>
-    </dependency>
 
-    <!-- https://mvnrepository.com/artifact/io.opencensus/opencensus-contrib-http-util -->
-    <dependency>
-      <groupId>io.opencensus</groupId>
-      <artifactId>opencensus-contrib-http-util</artifactId>
-      <version>0.31.1</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/io.opencensus/opencensus-api -->
-    <dependency>
-      <groupId>io.opencensus</groupId>
-      <artifactId>opencensus-api</artifactId>
-      <version>0.31.1</version>
-    </dependency>
     <dependency>
       <groupId>io.opencensus</groupId>
       <artifactId>opencensus-impl</artifactId>
@@ -140,6 +122,17 @@ LICENSE file.
       <groupId>io.opencensus</groupId>
       <artifactId>opencensus-exporter-stats-stackdriver</artifactId>
       <version>0.31.1</version>
+      <exclusions>
+        <exclusion>
+          <groupId>io.grpc</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.google.auth</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+
   </dependencies>
 </project>
