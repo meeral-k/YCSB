@@ -183,6 +183,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
         .stubSettings()
         .setEndpoint("test-bigtable.sandbox.googleapis.com:443");
 
+
     try {
       client = BigtableDataClient.create(builder.build());
     } catch (IOException e) {
