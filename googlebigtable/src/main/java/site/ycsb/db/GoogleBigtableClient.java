@@ -72,6 +72,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
   static final String JSON_KEY_FILE_KEY = "google.bigtable.auth.json.keyfile";
   static final String DEBUG_KEY = "debug";
   static final String COLUMN_FAMILY_KEY = "columnfamily";
+  static final String DATA_ENDPOINT = "google.bigtable.data.endpoint";
 
   static final String ASYNC_MUTATOR_MAX_MEMORY = "mutatorMaxMemory";
   static final String ASYNC_MAX_INFLIGHT_RPCS = "mutatorMaxInflightRPCs";
@@ -178,10 +179,13 @@ public class GoogleBigtableClient extends site.ycsb.DB {
                   .setFlowControlSettings(flowControlSettings.build())
                   .build());
     }
+    String dataEndpoint = properties.getProperty(DATA_ENDPOINT);
+    if (dataEndpoint != null) {
+      builder
+          .stubSettings()
+          .setEndpoint(dataEndpoint);
+    }
 
-    builder
-        .stubSettings()
-        .setEndpoint("test-bigtable.sandbox.googleapis.com:443");
 
 
     try {
