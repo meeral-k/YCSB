@@ -57,7 +57,7 @@ LICENSE file.
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigtable-bom</artifactId>
-        <version>${googlebigtable.version}</version>
+        <version>2.16.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
