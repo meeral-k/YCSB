@@ -53,8 +53,6 @@ import site.ycsb.ByteIterator;
 import site.ycsb.DBException;
 import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsConfiguration;
-import io.opencensus.exporter.stats.stackdriver.StackdriverStatsExporter;
 
 /**
  * Google Bigtable native client for YCSB framework.
