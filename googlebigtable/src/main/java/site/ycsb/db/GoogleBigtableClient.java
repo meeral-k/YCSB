@@ -141,11 +141,15 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       builder = BigtableDataSettings.newBuilder();
     }
 
+    try{
+      BigtableDataSettings.enableBuiltinMetrics();
+    } catch (IOException e) {
+      throw new DBException("Failed to enable build in metrics", e);
+    }
     builder
         .setProjectId(projectId)
         .setInstanceId(instanceId)
         // Enable GFE metric views
-        .enableBuiltinMetrics()
         .setRefreshingChannel(true);
 
     if (jsonKeyFilePath != null) {
