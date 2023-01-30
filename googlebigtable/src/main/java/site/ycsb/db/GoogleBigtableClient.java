@@ -188,13 +188,6 @@ public class GoogleBigtableClient extends site.ycsb.DB {
           .setEndpoint(dataEndpoint);
     }
 
-    
-    StackdriverStatsExporter.createAndRegister(
-      StackdriverStatsConfiguration.builder()
-          .setProjectId(projectId)
-          .build()
-    );
-
     try {
       client = BigtableDataClient.create(builder.build());
     } catch (IOException e) {
