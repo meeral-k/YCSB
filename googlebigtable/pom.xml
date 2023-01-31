@@ -69,6 +69,11 @@ LICENSE file.
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-monitoring</artifactId>
+      </dependency>
     </dependencies>
   </dependencyManagement>
 
