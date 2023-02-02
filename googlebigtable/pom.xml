@@ -41,7 +41,7 @@ LICENSE file.
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>libraries-bom</artifactId>
-        <version>26.1.4</version>
+        <version>26.5.0</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
@@ -53,6 +53,23 @@ LICENSE file.
         <type>pom</type>
         <scope>import</scope>
       </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-bigtable-bom</artifactId>
+        <version>${googlebigtable.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>com.google.cloud</groupId>
+        <artifactId>google-cloud-monitoring-bom</artifactId>
+        <version>3.4.1</version> <!-- needs to be in sync with google-cloud-bigtable-stats -->
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+
     </dependencies>
   </dependencyManagement>
 
@@ -79,7 +96,10 @@ LICENSE file.
       <artifactId>perfmark-api</artifactId>
       <version>0.26.0</version>
     </dependency>
-
+    <dependency>
+      <groupId>com.google.cloud</groupId>
+      <artifactId>google-cloud-monitoring</artifactId>
+    </dependency>
 
 <!--    <dependency>-->
 <!--      <groupId>io.opencensus</groupId>-->
