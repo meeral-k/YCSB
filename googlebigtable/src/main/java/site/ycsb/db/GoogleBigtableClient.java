@@ -162,7 +162,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
             .setCredentialsProvider(
                 FixedCredentialsProvider.create(GoogleCredentials.fromStream(fin)));
       } catch (IOException e) {
-        LOG.log(Level.WARNING,e.getMessage());
+        LOG.log(Level.WARNING, e.getMessage());
         throw new DBException(
             String.format("Failed to load credentials specified at path %s", jsonKeyFilePath), e);
       }
