@@ -64,7 +64,7 @@ import site.ycsb.Status;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
-  private static final Logger logger = Logger.getLogger(GoogleBigtableClient.class.getName());
+  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.getName());
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
@@ -162,7 +162,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
             .setCredentialsProvider(
                 FixedCredentialsProvider.create(GoogleCredentials.fromStream(fin)));
       } catch (IOException e) {
-        logger.log(Level.WARNING,e.getMessage());
+        LOG.log(Level.WARNING,e.getMessage());
         throw new DBException(
             String.format("Failed to load credentials specified at path %s", jsonKeyFilePath), e);
       }
@@ -219,7 +219,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
     clientSideBuffering =
         Boolean.parseBoolean(getProperties().getProperty(CLIENT_SIDE_BUFFERING, "false"));
 
-    System.err.println(
+    LOG.info(
         "Running Google Bigtable with Proto API"
             + (clientSideBuffering ? " and client side buffering." : "."));
 
@@ -269,8 +269,8 @@ public class GoogleBigtableClient extends site.ycsb.DB {
   public Status read(
       String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
     if (debug) {
-      logger.info("Doing read from Bigtable columnfamily " + columnFamily);
-      logger.info("Doing read for key: " + key);
+      LOG.info("Doing read from Bigtable columnfamily " + columnFamily);
+      LOG.info("Doing read for key: " + key);
     }
 
     Filter filter = FILTERS.family().exactMatch(columnFamily);
@@ -288,7 +288,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
         result.put(cell.getQualifier().toString(UTF8_CHARSET), wrapByteString(cell.getValue()));
 
         if (debug) {
-          logger.info(
+          LOG.info(
               "Result for field: "
                   + cell.getQualifier().toString(UTF8_CHARSET)
                   + " is: "
@@ -298,7 +298,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
       return Status.OK;
     } catch (RuntimeException e) {
-      logger.info("Failed to read key: " + key + " " + e.getMessage());
+      LOG.info("Failed to read key: " + key + " " + e.getMessage());
       return Status.ERROR;
     }
   }
@@ -331,7 +331,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
     try {
       rows = client.readRowsCallable().all().call(query);
     } catch (RuntimeException e) {
-      System.err.println("Exception during scan: " + e);
+      LOG.info("Exception during scan: " + e);
       return Status.ERROR;
     }
 
@@ -344,7 +344,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       for (RowCell cell : row.getCells()) {
         rowResult.put(cell.getQualifier().toString(UTF8_CHARSET), wrapByteString(cell.getValue()));
         if (debug) {
-          logger.info(
+          LOG.info(
               "Result for field: "
                   + cell.getQualifier().toString(UTF8_CHARSET)
                   + " is: "
@@ -360,7 +360,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
   @Override
   public Status update(String table, String key, Map<String, ByteIterator> values) {
     if (debug) {
-      logger.info("Setting up put for key: " + key);
+      LOG.info("Setting up put for key: " + key);
     }
 
     if (clientSideBuffering) {
@@ -375,7 +375,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
         client.mutateRow(rowMutation);
         return Status.OK;
       } catch (RuntimeException e) {
-        System.err.println("Failed to insert key: " + key + " " + e.getMessage());
+        LOG.info("Failed to insert key: " + key + " " + e.getMessage());
         return Status.ERROR;
       }
     }
@@ -389,7 +389,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
   @Override
   public Status delete(String table, String key) {
     if (debug) {
-      logger.info("Doing delete for key: " + key);
+      LOG.info("Doing delete for key: " + key);
     }
 
     if (clientSideBuffering) {
@@ -400,7 +400,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
         client.mutateRow(RowMutation.create(table, key).deleteRow());
         return Status.OK;
       } catch (RuntimeException e) {
-        System.err.println("Failed to delete key: " + key + " " + e.getMessage());
+        LOG.info("Failed to delete key: " + key + " " + e.getMessage());
         return Status.ERROR;
       }
     }
