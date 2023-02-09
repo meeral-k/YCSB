@@ -45,6 +45,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -62,6 +64,7 @@ import site.ycsb.Status;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
+  private static final Logger logger = Logger.getLogger(GoogleBigtableClient.class.getName());
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
@@ -159,6 +162,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
             .setCredentialsProvider(
                 FixedCredentialsProvider.create(GoogleCredentials.fromStream(fin)));
       } catch (IOException e) {
+        logger.log(Level.WARNING,e.getMessage());
         throw new DBException(
             String.format("Failed to load credentials specified at path %s", jsonKeyFilePath), e);
       }
@@ -265,8 +269,8 @@ public class GoogleBigtableClient extends site.ycsb.DB {
   public Status read(
       String table, String key, Set<String> fields, Map<String, ByteIterator> result) {
     if (debug) {
-      System.out.println("Doing read from Bigtable columnfamily " + columnFamily);
-      System.out.println("Doing read for key: " + key);
+      logger.info("Doing read from Bigtable columnfamily " + columnFamily);
+      logger.info("Doing read for key: " + key);
     }
 
     Filter filter = FILTERS.family().exactMatch(columnFamily);
@@ -284,7 +288,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
         result.put(cell.getQualifier().toString(UTF8_CHARSET), wrapByteString(cell.getValue()));
 
         if (debug) {
-          System.out.println(
+          logger.info(
               "Result for field: "
                   + cell.getQualifier().toString(UTF8_CHARSET)
                   + " is: "
@@ -294,6 +298,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
       return Status.OK;
     } catch (RuntimeException e) {
+      logger.info("Failed to read key: " + key + " " + e.getMessage());
       return Status.ERROR;
     }
   }
@@ -339,7 +344,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       for (RowCell cell : row.getCells()) {
         rowResult.put(cell.getQualifier().toString(UTF8_CHARSET), wrapByteString(cell.getValue()));
         if (debug) {
-          System.out.println(
+          logger.info(
               "Result for field: "
                   + cell.getQualifier().toString(UTF8_CHARSET)
                   + " is: "
@@ -355,7 +360,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
   @Override
   public Status update(String table, String key, Map<String, ByteIterator> values) {
     if (debug) {
-      System.out.println("Setting up put for key: " + key);
+      logger.info("Setting up put for key: " + key);
     }
 
     if (clientSideBuffering) {
@@ -384,7 +389,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
   @Override
   public Status delete(String table, String key) {
     if (debug) {
-      System.out.println("Doing delete for key: " + key);
+      logger.info("Doing delete for key: " + key);
     }
 
     if (clientSideBuffering) {
