@@ -45,8 +45,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -55,6 +53,8 @@ import site.ycsb.ByteIterator;
 import site.ycsb.DBException;
 import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Google Bigtable native client for YCSB framework.
@@ -64,7 +64,7 @@ import site.ycsb.Status;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
-  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(GoogleBigtableClient.class);
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
@@ -162,7 +162,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
             .setCredentialsProvider(
                 FixedCredentialsProvider.create(GoogleCredentials.fromStream(fin)));
       } catch (IOException e) {
-        LOG.log(Level.WARNING, e.getMessage());
+        LOG.error(e.getMessage());
         throw new DBException(
             String.format("Failed to load credentials specified at path %s", jsonKeyFilePath), e);
       }
@@ -298,7 +298,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
       return Status.OK;
     } catch (RuntimeException e) {
-      LOG.info("Failed to read key: " + key + " " + e.getMessage());
+      LOG.error("Failed to read key: " + key + " " + e.getMessage());
       return Status.ERROR;
     }
   }
