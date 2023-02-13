@@ -218,7 +218,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
     clientSideBuffering =
         Boolean.parseBoolean(getProperties().getProperty(CLIENT_SIDE_BUFFERING, "false"));
-
+    System.out.println("Please log something");
     LOG.info(
         "Running Google Bigtable with Proto API"
             + (clientSideBuffering ? " and client side buffering." : "."));
