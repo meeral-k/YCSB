@@ -22,6 +22,7 @@ import com.google.api.gax.batching.Batcher;
 import com.google.api.gax.batching.BatchingSettings;
 import com.google.api.gax.batching.FlowControlSettings;
 import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.retrying.RetrySettings;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
@@ -55,6 +56,7 @@ import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.threeten.bp.Duration;
 
 /**
  * Google Bigtable native client for YCSB framework.
@@ -128,6 +130,10 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       maxRpcs = Long.parseLong(properties.getProperty(ASYNC_MAX_INFLIGHT_RPCS));
     }
 
+    RetrySettings retrySettings = RetrySettings.newBuilder()
+          .setInitialRpcTimeout(Duration.ofMillis(4 * 1000)) // each attempt's timeout is 4 seconds
+          .setTotalTimeout(Duration.ofMillis(60 * 1000)) // the entire operation 
+          .build();
     BigtableDataSettings.Builder builder;
     if (emulatorHost != null) {
       int index = emulatorHost.lastIndexOf(":");
@@ -184,6 +190,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       builder
           .stubSettings()
           .bulkMutateRowsSettings()
+          .setRetrySettings(retrySettings) 
           .setBatchingSettings(
               defaultBatchingSettings.toBuilder()
                   .setFlowControlSettings(flowControlSettings.build())
@@ -196,6 +203,11 @@ public class GoogleBigtableClient extends site.ycsb.DB {
           .setEndpoint(dataEndpoint);
     }
 
+    builder.stubSettings().readRowsSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().readRowSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().bulkReadRowsSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().readModifyWriteRowSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().sampleRowKeysSettings().setRetrySettings(retrySettings);
     try {
       client = BigtableDataClient.create(builder.build());
     } catch (IOException e) {
