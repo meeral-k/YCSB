@@ -132,6 +132,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
     RetrySettings retrySettings = RetrySettings.newBuilder()
           .setInitialRpcTimeout(Duration.ofMillis(4 * 1000)) // each attempt's timeout is 4 seconds
+          .setMaxRpcTimeout(Duration.ofMillis(4 * 1000)) // max timeout is the same as initial
           .setTotalTimeout(Duration.ofMillis(60 * 1000)) // the entire operation 
           .build();
     BigtableDataSettings.Builder builder;
