@@ -54,8 +54,9 @@ import site.ycsb.ByteIterator;
 import site.ycsb.DBException;
 import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.threeten.bp.Duration;
 
 /**
@@ -66,7 +67,7 @@ import org.threeten.bp.Duration;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
-  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(GoogleBigtableClient.class);
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
