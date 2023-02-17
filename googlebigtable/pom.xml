@@ -90,7 +90,7 @@ LICENSE file.
       <artifactId>google-auth-library-credentials</artifactId>
       <version>1.12.1</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http -->
+    <!-- https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http 
     <dependency>
       <groupId>com.google.auth</groupId>
       <artifactId>google-auth-library-oauth2-http</artifactId>
@@ -100,11 +100,11 @@ LICENSE file.
       <groupId>io.perfmark</groupId>
       <artifactId>perfmark-api</artifactId>
       <version>0.26.0</version>
-    </dependency>
-    <dependency>
+    </dependency> -->
+    <!-- <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-monitoring</artifactId>
-    </dependency>
+    </dependency> -->
 
 <!--    <dependency>-->
 <!--      <groupId>io.opencensus</groupId>-->
@@ -140,74 +140,74 @@ LICENSE file.
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
-    </dependency>
+    </dependency> 
 
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigtable</artifactId>
     </dependency>
     <!-- https://mvnrepository.com/artifact/com.lmax/disruptor -->
-    <dependency>
+    <!-- <dependency>
       <groupId>com.lmax</groupId>
       <artifactId>disruptor</artifactId>
       <version>3.4.4</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-alts -->
-    <dependency>
+    <!-- <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-alts</artifactId>
       <version>1.50.2</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-stub -->
-    <dependency>
+    <!-- <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-stub</artifactId>
       <version>1.50.2</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-grpclb -->
-    <dependency>
+    <!-- <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-grpclb</artifactId>
       <version>1.50.2</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-googleapis -->
-    <dependency>
+    <!-- <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-googleapis</artifactId>
       <version>1.50.2</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-xds -->
-    <dependency>
+    <!-- <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-xds</artifactId>
       <version>1.50.2</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-rls -->
-    <dependency>
+    <!-- <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-rls</artifactId>
       <version>1.50.2</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/io.grpc/grpc-services -->
-    <dependency>
+    <!-- <dependency>
       <groupId>io.grpc</groupId>
       <artifactId>grpc-services</artifactId>
       <version>1.50.2</version>
-    </dependency>
+    </dependency> -->
 
     <!-- https://mvnrepository.com/artifact/com.google.api/gax -->
-    <dependency>
+    <!-- <dependency>
       <groupId>com.google.api</groupId>
       <artifactId>gax</artifactId>
       <version>2.19.5</version>
-    </dependency>
+    </dependency> -->
 
     <dependency>
       <groupId>junit</groupId>
