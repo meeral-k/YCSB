@@ -169,7 +169,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
             .setCredentialsProvider(
                 FixedCredentialsProvider.create(GoogleCredentials.fromStream(fin)));
       } catch (IOException e) {
-        LOG.error(e.getMessage());
+        //LOG.log(null, jsonKeyFilePath);(e.getMessage());
         throw new DBException(
             String.format("Failed to load credentials specified at path %s", jsonKeyFilePath), e);
       }
@@ -311,7 +311,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
       return Status.OK;
     } catch (RuntimeException e) {
-      LOG.error("Failed to read key: " + key + " " + e.getMessage());
+      //LOG.error("Failed to read key: " + key + " " + e.getMessage());
       return Status.ERROR;
     }
   }
