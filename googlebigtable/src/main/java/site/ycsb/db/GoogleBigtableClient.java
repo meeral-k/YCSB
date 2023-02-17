@@ -46,6 +46,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.logging.Logger;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -55,8 +56,6 @@ import site.ycsb.DBException;
 import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.threeten.bp.Duration;
 
 /**
@@ -67,7 +66,7 @@ import org.threeten.bp.Duration;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
-  private static final Logger LOG = LoggerFactory.getLogger(GoogleBigtableClient.class);
+  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.getName());
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
