@@ -242,8 +242,8 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
     clientSideBuffering =
         Boolean.parseBoolean(getProperties().getProperty(CLIENT_SIDE_BUFFERING, "false"));
-    String enabled_directpath = System.getenv("GOOGLE_CLOUD_ENABLE_DIRECT_PATH_XDS");
-    System.out.println("GOOGLE_CLOUD_ENABLE_DIRECT_PATH_XDS value: " + enabled_directpath);
+    String enabledDirectpath = System.getenv("GOOGLE_CLOUD_ENABLE_DIRECT_PATH_XDS");
+    System.out.println("GOOGLE_CLOUD_ENABLE_DIRECT_PATH_XDS value: " + enabledDirectpath);
     LOG.info(
         "Running Google Bigtable with Proto API"
             + (clientSideBuffering ? " and client side buffering." : "."));
