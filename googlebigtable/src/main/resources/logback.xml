@@ -1,13 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-  <appender name="CLOUD" class="com.google.cloud.logging.logback.LoggingAppender">
-    <!-- Optional : filter logs at or above a level -->
-    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-      <level>INFO</level>
-    </filter>
-    <flushLevel>WARN</flushLevel> <!-- Optional : default ERROR -->
-  </appender>
+        <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+                <encoder>
+                        <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+                </encoder>
+        </appender>
 
-  <root level="info">
-    <appender-ref ref="CLOUD" />
-  </root>
+        <root level="DEBUG">
+                <appender-ref ref="STDOUT" />
+        </root>
 </configuration>
