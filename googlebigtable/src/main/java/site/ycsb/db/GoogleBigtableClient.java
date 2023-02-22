@@ -22,6 +22,7 @@ import com.google.api.gax.batching.Batcher;
 import com.google.api.gax.batching.BatchingSettings;
 import com.google.api.gax.batching.FlowControlSettings;
 import com.google.api.gax.core.FixedCredentialsProvider;
+import com.google.api.gax.grpc.ChannelPoolSettings;
 import com.google.api.gax.retrying.RetrySettings;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
@@ -30,6 +31,7 @@ import com.google.cloud.bigtable.data.v2.models.Filters.Filter;
 import com.google.cloud.bigtable.data.v2.models.MutationApi;
 import com.google.cloud.bigtable.data.v2.models.Query;
 import com.google.cloud.bigtable.data.v2.models.Range.ByteStringRange;
+import com.google.cloud.bigtable.data.v2.stub.EnhancedBigtableStubSettings;
 import com.google.cloud.bigtable.data.v2.models.Row;
 import com.google.cloud.bigtable.data.v2.models.RowCell;
 import com.google.cloud.bigtable.data.v2.models.RowMutation;
@@ -46,7 +48,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.logging.Logger;
+
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -56,6 +58,8 @@ import site.ycsb.DBException;
 import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.threeten.bp.Duration;
 
 /**
@@ -66,7 +70,7 @@ import org.threeten.bp.Duration;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
-  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.getName());
+  private static final Logger LOG = LoggerFactory.getLogger(GoogleBigtableClient.class);
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
@@ -209,6 +213,13 @@ public class GoogleBigtableClient extends site.ycsb.DB {
     builder.stubSettings().bulkReadRowsSettings().setRetrySettings(retrySettings);
     builder.stubSettings().readModifyWriteRowSettings().setRetrySettings(retrySettings);
     builder.stubSettings().sampleRowKeysSettings().setRetrySettings(retrySettings);
+
+    builder.stubSettings().setTransportChannelProvider(EnhancedBigtableStubSettings
+    .defaultGrpcTransportProviderBuilder()
+    .setChannelPoolSettings(ChannelPoolSettings.builder()
+    .setMaxChannelCount(32)
+    .setMinChannelCount(32)
+    .build()).build());
     try {
       client = BigtableDataClient.create(builder.build());
     } catch (IOException e) {
