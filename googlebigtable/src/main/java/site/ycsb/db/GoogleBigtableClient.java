@@ -214,12 +214,12 @@ public class GoogleBigtableClient extends site.ycsb.DB {
     builder.stubSettings().readModifyWriteRowSettings().setRetrySettings(retrySettings);
     builder.stubSettings().sampleRowKeysSettings().setRetrySettings(retrySettings);
 
-    builder.stubSettings().setTransportChannelProvider(EnhancedBigtableStubSettings
-    .defaultGrpcTransportProviderBuilder()
-    .setChannelPoolSettings(ChannelPoolSettings.builder()
-    .setMaxChannelCount(32)
-    .setMinChannelCount(32)
-    .build()).build());
+   // builder.stubSettings().setTransportChannelProvider(EnhancedBigtableStubSettings
+   //   .defaultGrpcTransportProviderBuilder()
+   //   .setChannelPoolSettings(ChannelPoolSettings.builder()
+   //   .setMaxChannelCount(32)
+   //   .setMinChannelCount(32)
+   //   .build()).build());
     try {
       client = BigtableDataClient.create(builder.build());
     } catch (IOException e) {
