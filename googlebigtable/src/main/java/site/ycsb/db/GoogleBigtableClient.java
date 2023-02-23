@@ -40,6 +40,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnsafeByteOperations;
+
+import io.grpc.netty.shaded.io.netty.util.internal.SystemPropertyUtil;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
