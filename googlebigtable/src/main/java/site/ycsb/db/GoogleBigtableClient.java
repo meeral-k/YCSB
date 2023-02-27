@@ -156,11 +156,11 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       builder = BigtableDataSettings.newBuilder();
     }
 
-    //try{
-    //  BigtableDataSettings.enableBuiltinMetrics();
-    //} catch (IOException e) {
-    //  throw new DBException("Failed to enable build in metrics", e);
-    //}
+    try{
+      BigtableDataSettings.enableBuiltinMetrics();
+    } catch (IOException e) {
+      throw new DBException("Failed to enable build in metrics", e);
+    }
     builder
         .setProjectId(projectId)
         .setInstanceId(instanceId)
