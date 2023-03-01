@@ -59,7 +59,6 @@ import site.ycsb.DBException;
 import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import org.threeten.bp.Duration;
