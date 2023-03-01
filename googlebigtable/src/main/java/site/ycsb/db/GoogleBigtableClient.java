@@ -69,7 +69,7 @@ import org.threeten.bp.Duration;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
-  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class);
+  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.name());
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
