@@ -49,7 +49,7 @@ LICENSE file.
       <dependency>
         <groupId>com.google.cloud</groupId>
         <artifactId>google-cloud-bigtable-bom</artifactId>
-        <version>2.18.0</version>
+        <version>${googlebigtable.version}</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency> 
@@ -164,13 +164,9 @@ LICENSE file.
                 <goal>single</goal>
               </goals>
               <configuration>
-                <archive>
-                  <manifest>
-                    <mainClass>
-                      com.google.guidou.ReadData
-                    </mainClass>
-                  </manifest>
-                </archive>
+                <systemPropertyVariables>
+                  <googlebigtable.version>${googlebigtable.version}</googlebigtable.version>
+                </systemPropertyVariables>
                 <descriptorRefs>
                   <descriptorRef>jar-with-dependencies</descriptorRef>
                 </descriptorRefs>
