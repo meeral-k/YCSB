@@ -22,6 +22,8 @@ import com.google.api.gax.batching.Batcher;
 import com.google.api.gax.batching.BatchingSettings;
 import com.google.api.gax.batching.FlowControlSettings;
 import com.google.api.gax.core.FixedCredentialsProvider;
+//import com.google.api.gax.grpc.ChannelPoolSettings;
+import com.google.api.gax.retrying.RetrySettings;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.bigtable.data.v2.BigtableDataClient;
 import com.google.cloud.bigtable.data.v2.BigtableDataSettings;
@@ -29,6 +31,7 @@ import com.google.cloud.bigtable.data.v2.models.Filters.Filter;
 import com.google.cloud.bigtable.data.v2.models.MutationApi;
 import com.google.cloud.bigtable.data.v2.models.Query;
 import com.google.cloud.bigtable.data.v2.models.Range.ByteStringRange;
+//import com.google.cloud.bigtable.data.v2.stub.EnhancedBigtableStubSettings;
 import com.google.cloud.bigtable.data.v2.models.Row;
 import com.google.cloud.bigtable.data.v2.models.RowCell;
 import com.google.cloud.bigtable.data.v2.models.RowMutation;
@@ -37,6 +40,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.UnsafeByteOperations;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -45,6 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+//import java.util.logging.Logger;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -54,6 +59,8 @@ import site.ycsb.DBException;
 import site.ycsb.InputStreamByteIterator;
 import site.ycsb.Status;
 
+import org.threeten.bp.Duration;
+
 /**
  * Google Bigtable native client for YCSB framework.
  *
@@ -62,6 +69,7 @@ import site.ycsb.Status;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
+  //private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.name());
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
@@ -125,6 +133,11 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       maxRpcs = Long.parseLong(properties.getProperty(ASYNC_MAX_INFLIGHT_RPCS));
     }
 
+    RetrySettings retrySettings = RetrySettings.newBuilder()
+          .setInitialRpcTimeout(Duration.ofMillis(4 * 1000)) // each attempt's timeout is 4 seconds
+          .setMaxRpcTimeout(Duration.ofMillis(4 * 1000)) // max timeout is the same as initial
+          .setTotalTimeout(Duration.ofMillis(5 * 1000)) // the entire operation 
+          .build();
     BigtableDataSettings.Builder builder;
     if (emulatorHost != null) {
       int index = emulatorHost.lastIndexOf(":");
@@ -159,6 +172,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
             .setCredentialsProvider(
                 FixedCredentialsProvider.create(GoogleCredentials.fromStream(fin)));
       } catch (IOException e) {
+        //LOG.log(null, jsonKeyFilePath);(e.getMessage());
         throw new DBException(
             String.format("Failed to load credentials specified at path %s", jsonKeyFilePath), e);
       }
@@ -180,6 +194,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
       builder
           .stubSettings()
           .bulkMutateRowsSettings()
+          .setRetrySettings(retrySettings) 
           .setBatchingSettings(
               defaultBatchingSettings.toBuilder()
                   .setFlowControlSettings(flowControlSettings.build())
@@ -192,6 +207,18 @@ public class GoogleBigtableClient extends site.ycsb.DB {
           .setEndpoint(dataEndpoint);
     }
 
+    builder.stubSettings().readRowsSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().readRowSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().bulkReadRowsSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().readModifyWriteRowSettings().setRetrySettings(retrySettings);
+    builder.stubSettings().sampleRowKeysSettings().setRetrySettings(retrySettings);
+
+   // builder.stubSettings().setTransportChannelProvider(EnhancedBigtableStubSettings
+   //   .defaultGrpcTransportProviderBuilder()
+   //   .setChannelPoolSettings(ChannelPoolSettings.builder()
+   //   .setMaxChannelCount(32)
+   //   .setMinChannelCount(32)
+   //   .build()).build());
     try {
       client = BigtableDataClient.create(builder.build());
     } catch (IOException e) {
@@ -214,8 +241,9 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
     clientSideBuffering =
         Boolean.parseBoolean(getProperties().getProperty(CLIENT_SIDE_BUFFERING, "false"));
-
-    System.err.println(
+    String enabledDirectpath = System.getenv("GOOGLE_CLOUD_ENABLE_DIRECT_PATH_XDS");
+    System.out.println("GOOGLE_CLOUD_ENABLE_DIRECT_PATH_XDS value: " + enabledDirectpath);
+    System.out.println(
         "Running Google Bigtable with Proto API"
             + (clientSideBuffering ? " and client side buffering." : "."));
 
@@ -294,6 +322,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
 
       return Status.OK;
     } catch (RuntimeException e) {
+      //LOG.error("Failed to read key: " + key + " " + e.getMessage());
       return Status.ERROR;
     }
   }
@@ -326,7 +355,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
     try {
       rows = client.readRowsCallable().all().call(query);
     } catch (RuntimeException e) {
-      System.err.println("Exception during scan: " + e);
+      System.out.println("Exception during scan: " + e);
       return Status.ERROR;
     }
 
@@ -370,7 +399,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
         client.mutateRow(rowMutation);
         return Status.OK;
       } catch (RuntimeException e) {
-        System.err.println("Failed to insert key: " + key + " " + e.getMessage());
+        System.out.println("Failed to insert key: " + key + " " + e.getMessage());
         return Status.ERROR;
       }
     }
@@ -395,7 +424,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
         client.mutateRow(RowMutation.create(table, key).deleteRow());
         return Status.OK;
       } catch (RuntimeException e) {
-        System.err.println("Failed to delete key: " + key + " " + e.getMessage());
+        System.out.println("Failed to delete key: " + key + " " + e.getMessage());
         return Status.ERROR;
       }
     }
