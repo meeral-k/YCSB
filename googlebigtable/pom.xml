@@ -93,124 +93,16 @@ LICENSE file.
       <artifactId>google-auth-library-credentials</artifactId>
       <version>1.12.1</version>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.google.auth/google-auth-library-oauth2-http 
-    <dependency>
-      <groupId>com.google.auth</groupId>
-      <artifactId>google-auth-library-oauth2-http</artifactId>
-      <version>1.12.1</version>
-    </dependency>
-    <dependency>
-      <groupId>io.perfmark</groupId>
-      <artifactId>perfmark-api</artifactId>
-      <version>0.26.0</version>
-    </dependency> -->
-    <!-- <dependency>
-      <groupId>com.google.cloud</groupId>
-      <artifactId>google-cloud-monitoring</artifactId>
-    </dependency> -->
-
-<!--    <dependency>-->
-<!--      <groupId>io.opencensus</groupId>-->
-<!--      <artifactId>opencensus-exporter-stats-stackdriver</artifactId>-->
-<!--      <version>0.31.1</version>-->
-<!--    </dependency>-->
-
-<!--    <dependency>-->
-<!--      <groupId>io.opencensus</groupId>-->
-<!--      <artifactId>opencensus-api</artifactId>-->
-<!--      <version>0.31.1</version>-->
-<!--    </dependency>-->
-
-<!--    <dependency>-->
-<!--      <groupId>io.opencensus</groupId>-->
-<!--      <artifactId>opencensus-impl</artifactId>-->
-<!--      <version>0.31.1</version>-->
-<!--      <scope>runtime</scope>-->
-<!--    </dependency>-->
-
-<!--    <dependency>-->
-<!--      <groupId>io.opencensus</groupId>-->
-<!--      <artifactId>opencensus-exporter-trace-stackdriver</artifactId>-->
-<!--      <version>0.31.1</version>-->
-<!--    </dependency>-->
-
-<!--    <dependency>-->
-<!--      <groupId>io.opencensus</groupId>-->
-<!--      <artifactId>opencensus-contrib-grpc-metrics</artifactId>-->
-<!--      <version>0.31.1</version>-->
-<!--    </dependency>-->
-
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigquery</artifactId>
+      <version>2.23.2</version>
     </dependency> 
 
     <dependency>
       <groupId>com.google.cloud</groupId>
       <artifactId>google-cloud-bigtable</artifactId>
     </dependency>
-    <!-- https://mvnrepository.com/artifact/com.lmax/disruptor -->
-    <!-- <dependency>
-      <groupId>com.lmax</groupId>
-      <artifactId>disruptor</artifactId>
-      <version>3.4.4</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-alts -->
-    <!-- <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-alts</artifactId>
-      <version>1.50.2</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-stub -->
-    <!-- <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-stub</artifactId>
-      <version>1.50.2</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-grpclb -->
-    <!-- <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-grpclb</artifactId>
-      <version>1.50.2</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-googleapis -->
-    <!-- <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-googleapis</artifactId>
-      <version>1.50.2</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-xds -->
-    <!-- <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-xds</artifactId>
-      <version>1.50.2</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-rls -->
-    <!-- <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-rls</artifactId>
-      <version>1.50.2</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/io.grpc/grpc-services -->
-    <!-- <dependency>
-      <groupId>io.grpc</groupId>
-      <artifactId>grpc-services</artifactId>
-      <version>1.50.2</version>
-    </dependency> -->
-
-    <!-- https://mvnrepository.com/artifact/com.google.api/gax -->
-    <!-- <dependency>
-      <groupId>com.google.api</groupId>
-      <artifactId>gax</artifactId>
-      <version>2.19.5</version>
-    </dependency> -->
 
     <dependency>
       <groupId>junit</groupId>
