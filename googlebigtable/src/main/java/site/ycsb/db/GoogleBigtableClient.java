@@ -49,7 +49,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-//import java.util.logging.Logger;
+import java.util.logging.Logger;
 import java.util.Properties;
 import java.util.Set;
 import java.util.Vector;
@@ -69,7 +69,7 @@ import org.threeten.bp.Duration;
  * wrapped up in the HBase API. To use the HBase API, see the hbase10 client binding.
  */
 public class GoogleBigtableClient extends site.ycsb.DB {
-  //private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.name());
+  private static final Logger LOG = Logger.getLogger(GoogleBigtableClient.class.getName());
   public static final Charset UTF8_CHARSET = Charset.forName("UTF8");
 
   /** Property names for the CLI. */
@@ -136,7 +136,7 @@ public class GoogleBigtableClient extends site.ycsb.DB {
     RetrySettings retrySettings = RetrySettings.newBuilder()
           .setInitialRpcTimeout(Duration.ofMillis(4 * 1000)) // each attempt's timeout is 4 seconds
           .setMaxRpcTimeout(Duration.ofMillis(4 * 1000)) // max timeout is the same as initial
-          .setTotalTimeout(Duration.ofMillis(5 * 1000)) // the entire operation 
+          .setTotalTimeout(Duration.ofMillis(5 * 1000)) // the entire operation e
           .build();
     BigtableDataSettings.Builder builder;
     if (emulatorHost != null) {
